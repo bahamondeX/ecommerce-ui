@@ -50,3 +50,6 @@ Process: Natural
 Elevation: 6000+ Feet Above Sea Level
 
 # Subscriptions: Save
+
+
+https://www.mercadopago.com.pe/checkout/v1/payment/redirect/3b5c2f8b-71bb-4fde-8c46-00a2785ecfed/error/?source=link&preference-id=756504869-95be6864-c1c1-4e76-aca1-23ef8cbe81dd&router-request-id=8ed80d65-4e13-4f7a-9f31-37cea4b66554&p=ba90f4db1a568424996bae46dd1ce84f

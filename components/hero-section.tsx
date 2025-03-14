@@ -13,7 +13,7 @@ export function HeroSection() {
       >
         <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/80 to-background/50" />
       </div>
-
+ 
       <div className="relative container px-4 py-24 md:py-36 flex flex-col items-start">
         <motion.div
           className="max-w-xl"

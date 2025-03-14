@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useCallback } from "react";
+import React, { createContext, useState, useCallback } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import UserCard from "@/components/ui/user-card";
 import { Expand, Mail, RefreshCcw, UserCircleIcon } from "lucide-react";
@@ -35,9 +35,16 @@ const GlamourousAuthCard: React.FC<AuthCardProps> = ({ onExpand }) => {
           ...prev,
           [field]: e.target.value,
         }));
+      setIsLoggedIn(!isLoggedIn);
       },
     [],
   );
+  
+  const handleLogout = useCallback(() => {
+    logout();
+    setIsLoggedIn(false)
+  }, [logout]);
+
 
   const handleExpand = useCallback(() => {
     setIsExpanded(!isExpanded);

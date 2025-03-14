@@ -4,8 +4,9 @@ import { useState } from "react";
 import { ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import type { Product } from "@/types/product";
+import type { Product } from "@/types/cart";
 import { motion } from "framer-motion";
+import { useCart } from "@/contexts/CartContext";
 
 type AddToCartButtonProps = {
   product: Product;
@@ -22,11 +23,14 @@ export default function AddToCartButton({
 }: AddToCartButtonProps) {
   const [isAdding, setIsAdding] = useState(false);
   const { toast } = useToast();
+  const { addItem } = useCart();
 
   const handleAddToCart = async () => {
     setIsAdding(true);
 
     await new Promise((resolve) => setTimeout(resolve, 300));
+
+    addItem(product);
 
     toast({
       title: "Added to cart",

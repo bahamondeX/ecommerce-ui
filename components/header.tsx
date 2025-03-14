@@ -3,19 +3,20 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ShoppingCart, Menu, X, Coffee } from "lucide-react";
+import { ShoppingCart, Menu, X, UserIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useCart } from "@/components/cart/cart-context";
-import Image from "lucide-react";
-import { CartSheet } from "@/components/cart/cart-sheet";
+import { useCart } from "@/contexts/CartContext";
+import CartSideBar from "@/components/cart/card-sidebar";
 import { motion } from "framer-motion";
-import { AuthContext } from "@/contexts/AuthContext";
+import { useAuth } from "@/hooks/use-auth";
+import Auth from "@/components/auth";
 
 export function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
   const { cartCount, toggleCart } = useCart();
+  const { isAuthenticated, user, login, logout } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -32,6 +33,13 @@ export function Header() {
     { href: "/about", label: "About Us" },
     { href: "/contact", label: "Contact" },
   ];
+
+  const handleAuthExpand = (expanded: boolean) => {
+    // Implement your resizer logic here based on the expanded state.
+    // For example, you might want to adjust the layout or styling.
+    console.log("Auth component expanded:", expanded);
+    // Add logic to resize or adjust layout based on expanded state.
+  };
 
   return (
     <header
@@ -73,24 +81,25 @@ export function Header() {
             </motion.div>
           ))}
         </nav>
-
         <div className="flex items-center space-x-4">
-          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="relative hover:bg-amber-100 transition-colors duration-300"
-              onClick={toggleCart}
-            >
-              <ShoppingCart className="h-5 w-5" />
-              {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-gradient-to-r from-amber-700 to-amber-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center shadow-md">
-                  {cartCount}
-                </span>
-              )}
-            </Button>
-          </motion.div>
-
+          <Auth onExpand={() => handleAuthExpand(true)} />
+          {isAuthenticated && user && (
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="relative hover:bg-amber-100 transition-colors duration-300"
+                onClick={toggleCart}
+              >
+                <ShoppingCart className="h-5 w-5" />
+                {cartCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-gradient-to-r from-amber-700 to-amber-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center shadow-md">
+                    {cartCount}
+                  </span>
+                )}
+              </Button>
+            </motion.div>
+          )}
           <Button
             variant="ghost"
             size="icon"
@@ -133,15 +142,9 @@ export function Header() {
           </nav>
         </motion.div>
       )}
-      <AuthContext.Consumer>
-        {({ isAuthenticated, user, logout }) =>
-          isAuthenticated && user && logout ? (
-            <CartSheet user={user} logout={logout} />
-          ) : (
-            <h1>Hello</h1>
-          )
-        }
-      </AuthContext.Consumer>
+
+      {/* Cart Sheet */}
+      {isAuthenticated && user && <CartSideBar user={user} logout={logout} />}
     </header>
   );
 }

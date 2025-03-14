@@ -1,5 +1,5 @@
 "use client";
-
+import { Order } from "@/types/cart";
 import React, {
   createContext,
   useContext,
@@ -8,10 +8,12 @@ import React, {
   type ReactNode,
 } from "react";
 import { useAuth } from "../hooks/use-auth";
-import type { Product } from "@/types/product";
-import { useCart } from "@/lib/cart"; // Import Firebase client functions
+import type { Product } from "@/types/cart";
+import { useFirestore } from "@/hooks/use-firestore";
+import { nanoid } from "nanoid";
 
 type CartItem = {
+  id?: string;
   product: Product;
   quantity: number;
 };
@@ -39,169 +41,149 @@ type CartContextType = {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
-const shippingMethods: ShippingMethod[] = [
-  {
-    id: "pickup",
-    name: "Store Pickup",
-    price: 0,
-    estimatedDays: "Ready in 24 hours",
-  },
-  {
-    id: "dhl",
-    name: "DHL Express",
-    price: 12.99,
-    estimatedDays: "1-2 business days",
-  },
-  {
-    id: "ups",
-    name: "UPS Standard",
-    price: 8.99,
-    estimatedDays: "3-5 business days",
-  },
-];
-
-
 export function CartProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth();
-  const [items, setItems] = useState<CartItem[]>([]);
+  const { user, login } = useAuth();
+  const [cart, setCart] = useState<{ items: CartItem[] }>({ items: [] });
   const [cartCount, setCartCount] = useState(0);
   const [cartTotal, setCartTotal] = useState(0);
-  const [shippingMethod, setShippingMethod] = useState<ShippingMethod | null>(
-    null,
-  );
+  const [shippingMethod, setShippingMethod] = useState<ShippingMethod | null>(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  
+  const [addProduct, getProduct, delProduct] = useFirestore<Product>("carts");
 
-  // Load cart from Firebase on mount
+  // Cargar carrito desde Firebase cuando cambia el usuario
   useEffect(() => {
-    const loadCartFromFirebase = async () => {
-      if (user) {
-        try {
-          const firebaseCart = await (user);
-          setItems(firebaseCart);
-        } catch (error) {
-          console.error("Failed to load cart from Firebase", error);
-        }
-      }
-    };
+    if (!user) return;
 
-    loadCartFromFirebase();
+    const unsubscribe = getProduct(user);
+
+    return () => unsubscribe();
   }, [user]);
 
+  // Actualizar conteo de ítems y total del carrito
   useEffect(() => {
-    const count = items.reduce((total, item) => total + item.quantity, 0);
-    const total = items.reduce(
-      (total, item) => total + item.product.price * item.quantity,
-      0,
-    );
+    const count = cart.items.reduce((total, item) => total + item.quantity, 0);
+    const total = cart.items.reduce((total, item) => total + item.quantity * item.product.price, 0);
 
     setCartCount(count);
     setCartTotal(total);
-  }, [items]);
+  }, [cart.items]);
 
+  // Calcular método de envío si el usuario no está autenticado
   useEffect(() => {
     if (!user) {
-      setItems([]);
-      setShippingMethod(null);
+      setShippingMethod({
+        id: nanoid(),
+        name: "",
+        price: cart.items.reduce((acc, item) => acc + item.quantity * item.product.price, 0),
+        estimatedDays: "2 días",
+      });
     }
-  }, [user]);
+  }, [user, cart.items]);
 
-  const addItem = async (product: Product, quantity = 1) => {
-    if (user) {
-      try {
-        await addItemToCart(user, product, quantity);
-        const updatedCart = await getUserCart(user);
-        setItems(updatedCart);
-        setIsCartOpen(true);
-      } catch (error) {
-        console.error("Failed to add item to cart", error);
+  // Agregar un producto al carrito
+  const addItem = async (product: Product, quantity: number = 1) => {
+    if (!user) return;
+
+    try {
+      const existingItem = cart.items.find(item => item.product.id === product.id);
+      let updatedItems;
+
+      if (existingItem) {
+        updatedItems = cart.items.map(item =>
+          item.product.id === product.id ? { ...item, quantity: item.quantity + quantity } : item
+        );
+      } else {
+        updatedItems = [...cart.items, { product, quantity }];
       }
+
+      setCart({ items: updatedItems });
+      await addProduct({ data: product, quantity }, user);
+    } catch (error) {
+      console.error("Failed to add item to cart", error);
     }
   };
 
+  // Remover un producto del carrito
   const removeItem = async (productId: string) => {
-    if (user) {
-      try {
-        await removeItemFromCart(user, productId);
-        const updatedCart = await getUserCart(user);
-        setItems(updatedCart);
-      } catch (error) {
-        console.error("Failed to remove item from cart", error);
-      }
+    if (!user) return;
+
+    try {
+      const updatedItems = cart.items.filter(item => item.product.id !== productId);
+      setCart({ items: updatedItems });
+
+      await delProduct(productId, user);
+    } catch (error) {
+      console.error("Failed to remove item from cart", error);
     }
   };
 
+  // Actualizar la cantidad de un producto en el carrito
   const updateItemQuantity = async (productId: string, quantity: number) => {
-    if (user) {
-      try {
-        if (quantity <= 0) {
-          await removeItem(productId);
-          return;
-        }
-        await updateCartItemQuantity(user, productId, quantity);
-        const updatedCart = await getUserCart(user);
-        setItems(updatedCart);
-      } catch (error) {
-        console.error("Failed to update item quantity", error);
+    if (!user) return;
+
+    try {
+      if (quantity <= 0) {
+        await removeItem(productId);
+        return;
       }
+
+      const updatedItems = cart.items.map(item =>
+        item.product.id === productId ? { ...item, quantity } : item
+      );
+
+      setCart({ items: updatedItems });
+      await addProduct({ data: updatedItems.find(item => item.product.id === productId)!.product, quantity }, user);
+    } catch (error) {
+      console.error("Failed to update item quantity", error);
     }
   };
 
+  // Vaciar el carrito
   const clearCart = async () => {
-    if (user) {
-      try {
-        await clearUserCart(user);
-        setItems([]);
-        setShippingMethod(null);
-      } catch (error) {
-        console.error("Failed to clear cart", error);
-      }
+    if (!user) return;
+
+    try {
+      const promises = cart.items.map(item => delProduct(item.product.id!, user));
+      await Promise.all(promises);
+
+      setCart({ items: [] });
+      setShippingMethod(null);
+    } catch (error) {
+      console.error("Failed to clear cart", error);
     }
   };
 
+  // Alternar la visibilidad del carrito
   const toggleCart = () => {
-    setIsCartOpen((prev) => !prev);
+    setIsCartOpen(prev => !prev);
   };
 
   return (
-    <CartContext.Provider
-      value={{
-        items,
-        cartCount,
-        cartTotal,
-        shippingMethod,
-        isCartOpen,
-        addItem,
-        removeItem,
-        updateItemQuantity,
-        clearCart,
-        setShippingMethod: (method) => setShippingMethod(method),
-        toggleCart,
-      }}
-    >
-      {children}
-    </CartContext.Provider>
-  );
-}
+          <CartContext.Provider
+            value={{
+              items: cart.items,
+              cartCount,
+              cartTotal,
+              shippingMethod,
+              isCartOpen,
+              addItem,
+              removeItem,
+              updateItemQuantity,
+              clearCart,
+              setShippingMethod,
+              toggleCart,
+            }}
+          >
+            {children}
+          </CartContext.Provider>
+        )
 
+// Hook personalizado para usar el carrito
 export function useCart() {
   const context = useContext(CartContext);
-  if (context === undefined) {
-    return {
-      items: [] as Array<CartItem>,
-      cartCount: 0,
-      cartTotal: 0,
-      shippingMethod: null,
-      isCartOpen: false,
-      addItem: async () => null,
-      removeItem: async () => null,
-      updateItemQuantity: async () => null,
-      clearCart: async () => null,
-      setShippingMethod: () => null,
-      toggleCart: () => null,
-      AuthComponent: <div>Hi</div>,
-    };
+  if (!context) {
+    throw new Error("useCart must be used within a CartProvider");
   }
   return context;
 }
-
-export { shippingMethods };

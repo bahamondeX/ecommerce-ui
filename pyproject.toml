@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "sugarpay"
+version = "0.0.1"
+description = "Payment Gateway"
+authors = ["Oscar Bahamonde <oscar.bahamonde.dev@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+fastapi = {extras = ["all"], version = "^0.115.11"}
+uvicorn = {extras = ["standard"], version = "^0.34.0"}
+httpx = "^0.28.1"
+iso8601 = "^2.1.0"
+loguru = "^0.7.3"
+cryptography = {extras = ["all"], version = "^44.0.2"}
+boto3 = "^1.37.12"
+boto3-stubs = {extras = ["all"], version = "^1.37.12"}
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

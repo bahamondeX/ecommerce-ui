@@ -26,7 +26,7 @@ type AuthContextProps = {
 const AuthContext = createContext<AuthContextProps>({
   isAuthenticated: false,
   user: null,
-  logout: () => {},
+  logout: () => {}
 });
 
 const AuthComponent: React.FC<AuthCardProps> = ({ children }) => {
@@ -99,7 +99,7 @@ const AuthComponent: React.FC<AuthCardProps> = ({ children }) => {
         onClick={() => login(provider)}
         className="bg-blue-800 hover:bg-blue-900 text-white font-semibold py-2 px-4 rounded flex items-center justify-center gap-2"
       >
-        <Icon icon="logos:facebook-icon" width="24" height="24" />
+        <Icon icon="logos:facebook" width="24" height="24" />
         Facebook
       </button>
     ),
@@ -153,7 +153,6 @@ const AuthComponent: React.FC<AuthCardProps> = ({ children }) => {
   ];
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user, logout, loading }}>
       <div className="min-h-screen flex items-center justify-center bg-gray-200">
         <div className="bg-amber-50 p-8 rounded-lg shadow-lg w-96">
           <h2 className="text-2xl font-semibold mb-4 text-center text-amber-900">
@@ -183,10 +182,7 @@ const AuthComponent: React.FC<AuthCardProps> = ({ children }) => {
             </div>
           )}
         </div>
-      </div>
-      {children}
-    </AuthContext.Provider>
-  );
+    </div>)
 };
 
 export default AuthComponent;

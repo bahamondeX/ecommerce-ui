@@ -3,17 +3,15 @@ type CartItem = {
   quantity: number;
 };
 
-
-
-type ShippingInfo = {
-  id: string;
+type ShippingMethod = {
+  id?: string;
   name: "local" | "dhl" | "ups";
   price: number;
   estimatedDays: string;
 };
 
 type Product = {
-  id: string;
+  id?: string;
   name: string;
   slug: string;
   description: string;
@@ -26,25 +24,25 @@ type Product = {
 };
 
 type Order = {
-  id: string;
+  id?: string;
   userId: string;
   items: CartItem[];
-  shippingMethod: ShippingInfo;
+  shippingMethod: ShippingMethod;
   totalPrice: number;
 }
 
-interface ShoppingCart {
+interface CartContextType {
   items: CartItem[];
   cartCount: number;
   cartTotal: number;
-  shippingMethod: ShippingInfo | null;
+  shippingMethod: ShippingMethod | null;
   isCartOpen: boolean;
   addItem: (product: Product, quantity?: number) => void;
   removeItem: (productId: string) => void;
   updateItemQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
-  setShippingMethod: (method: ShippingInfo | null) => void;
+  setShippingMethod: (method: ShippingMethod | null) => void;
   toggleCart: () => void;
 };
 
-export type { Product, CartItem, ShippingInfo, ShoppingCart, Order };
+export type { Product, CartItem, ShippingMethod, CartContextType, Order };

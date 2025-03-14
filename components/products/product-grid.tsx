@@ -5,9 +5,9 @@ import { useSearchParams } from "next/navigation";
 import type { Product } from "@/types/product";
 import { ProductCard } from "@/components/products/product-card";
 import { filterProducts } from "@/lib/filter-products";
-import { useCart } from "@/contexts/CartProvider";
 import AddToCartButton from "../cart/add-to-cart-button";
-import AuthComponent from "@/contexts/AuthContext";
+import Cart from "@/components/cart/Cart";
+import { useCart } from "@/contexts/CartContext";
 
 type ProductGridProps = {
   initialProducts: Product[];
@@ -17,6 +17,7 @@ export function ProductGrid({ initialProducts }: ProductGridProps) {
   const searchParams = useSearchParams();
   const [products, setProducts] = useState<Product[]>(initialProducts);
   const [isLoading, setIsLoading] = useState(false);
+  const { toggleCart } = useCart();
 
   const applyFilters = useCallback(() => {
     setIsLoading(true);
@@ -79,11 +80,13 @@ export function ProductGrid({ initialProducts }: ProductGridProps) {
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       {products.map((product, index) => (
         <ProductCard key={product.id} product={product} index={index}>
-          <AuthComponent>
-            <AddToCartButton product={product} variant="secondary" />
-          </AuthComponent>
+          <AddToCartButton product={product} variant="secondary" />
         </ProductCard>
       ))}
+      <Cart />
+      <button onClick={toggleCart} className="fixed bottom-4 right-4 bg-blue-500 text-white p-4 rounded-full shadow-lg">
+        Open Cart
+      </button>
     </div>
   );
 }

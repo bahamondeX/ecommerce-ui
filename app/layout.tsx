@@ -3,7 +3,7 @@ import "@/styles/globals.css";
 import { Inter, Playfair_Display } from "next/font/google";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
-import { CartProvider } from "@/components/cart/cart-context";
+import { CartProvider } from "@/contexts/CartContext";
 import { Toaster } from "@/components/ui/toaster";
 import type { Metadata } from "next";
 

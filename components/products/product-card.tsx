@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import type { Product } from "@/types/product";
+import type { Product } from "@/types/cart";
 import { motion } from "framer-motion";
 
 type ProductCardProps = {

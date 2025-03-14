@@ -50,6 +50,25 @@ export function ProductFilters() {
     "Raw",
   ];
 
+  const handlePriceRangeChange = (value: number[]) => {
+    setPriceRange(value);
+    
+  
+    const params = new URLSearchParams(searchParams.toString());
+    
+    // Remove existing price parameters
+    params.delete("minPrice");
+    params.delete("maxPrice");
+    
+    // Add new price parameters
+    params.append("minPrice", value[0].toString());
+    params.append("maxPrice", value[1].toString());
+    
+    // Update the URL without full page refresh
+    router.push(`${pathname}?${params.toString()}`, { scroll: false });
+  
+  }
+
   useEffect(() => {
     setMounted(true);
 
@@ -221,7 +240,7 @@ export function ProductFilters() {
                   min={0}
                   max={100}
                   step={1}
-                  onValueChange={setPriceRange}
+                  onValueChange={handlePriceRangeChange}
                 />
                 <div className="flex items-center justify-between">
                   <span className="text-sm">${priceRange[0]}</span>

@@ -1,0 +1,8 @@
+fastapi[all]
+uvicorn[standard]
+httpx
+iso8601
+loguru
+cryptography[all]
+boto3
+botocore-stubs[all]
