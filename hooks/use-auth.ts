@@ -36,6 +36,7 @@ type AuthState = {
   verify: () => Promise<void>;
   isAuthenticated: boolean;
 };
+
 export function useAuth(): AuthState {
   const [user, setUser] = useState<User | null>(null);
   const [error, setError] = useState<string | null>(null);
